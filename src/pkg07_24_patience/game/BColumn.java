@@ -29,14 +29,14 @@ public class BColumn extends LinkedList<Card> {
         for (int i = 0; i < x; i++) {
             super.add(d.remove(0));
         }
-        this.getLast().show = true;
         positioning(x);
+        this.getLast().show = true;
     }
     
     private void positioning(int x) {
         this.stream().forEach((el) -> {
             el.x = WL1 + (CW + DIF) * (x-1);
-            el.show = true;
+            el.show = false;
         });
         for (int i = 0; i < this.size(); i++) {
             this.get(i).y = HL2 + DIFH * i;
