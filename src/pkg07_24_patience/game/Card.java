@@ -22,12 +22,14 @@ public class Card {
     boolean show;
     boolean selected;
     char t;
+    Type T;
 
     public Card(int x, int y, int nmb, Type T, boolean show) {
         this.x = x;
         this.y = y;
         this.nmb = nmb;
         this.show = show;
+        this.T = T;
         selected = false;
         switch(T) {
             case CLUB: {

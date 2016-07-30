@@ -45,7 +45,6 @@ public class BColumn extends LinkedList<Card> {
 
     @Override
     public boolean addAll(Collection<? extends Card> c) {
-        System.out.println(c.size());
         if (super.addAll(c)) {
              positioning();
         }
