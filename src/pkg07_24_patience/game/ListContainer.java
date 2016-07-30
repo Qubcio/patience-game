@@ -22,4 +22,11 @@ public class ListContainer extends LinkedList<Collection<Card>>{
             });
         }));
     }
+    public void setSel() {
+        stream().forEach((el) -> {
+            el.stream().forEach((el2) -> {
+                el2.selected = false;
+            });
+        });
+    }
 }

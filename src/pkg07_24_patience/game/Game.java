@@ -78,7 +78,8 @@ public class Game implements MouseListener {
     List<Card> dA;
     ListContainer l;
     BColumn[] mY;
-    boolean columnPick;
+    Card cP;
+    boolean fromTop;
     /**
      *
      * @param main
@@ -91,7 +92,33 @@ public class Game implements MouseListener {
         tS = new DequeMyClass();
         l = new ListContainer();
         mY = new BColumn[COL];
-        columnPick = false;
+        cP = null;
+        fromTop = false;
+        Type[] type = Type.values();
+        for (int i = CF; i <= CL; i++) {
+            for (Type t : type) {
+                cards.add(new Card(MY_WIDTH, 0, i, t, false));
+            }
+        }
+        Collections.shuffle(cards);
+        for(int i = 1; i <= COL; i++) {
+            mY[i-1] = new BColumn(i, cards);
+        }
+        tF.addAll(cards);
+        addingToL();
+    }
+    
+    public void wipe() {
+        tF.clear();
+        dA.clear();
+        tS.clear();
+        for (BColumn m : mY) {
+            m.clear();
+        }
+        l.clear();
+        List<Card> cards = new LinkedList<>();
+        cP = null;
+        fromTop = false;
         Type[] type = Type.values();
         for (int i = CF; i <= CL; i++) {
             for (Type t : type) {
@@ -114,6 +141,14 @@ public class Game implements MouseListener {
     public void mouseClicked(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
+        if (cP != null) {
+            moveColumn(x, y);
+            cP = null;
+            l.setSel();
+            return;
+        }
+        cP = null;
+        l.setSel();
         topLeft(x,y);
         bottom(x,y);
     }
@@ -160,6 +195,8 @@ public class Game implements MouseListener {
         }
         if (!tS.isEmpty() && tS.getLast().clickIn(x, y)) {
             tS.getLast().selected = !tS.getLast().selected;
+            cP = tS.getLast();
+            fromTop = true;
         }
     }
 
@@ -167,10 +204,52 @@ public class Game implements MouseListener {
         for (BColumn bC : mY) {
             int a = bC.inList(x, y);
             if (a != -1) {
-                columnPick = bC.highlight(a);
+                cP = bC.highlight(a);
                 break;
             }
         }
+    }
+
+    private boolean moveColumn(int x, int y) {
+        for (BColumn bC : mY) {
+            if (!bC.isEmpty()) {
+                if(bC.getLast().clickIn(x, y) && bC.getLast().nmb == cP.nmb + 1 
+                    && bC.getLast().t != cP.t) {
+                    if(fromTop) {
+                        bC.addLast(cP);
+                        tS.removeLast();
+                        fromTop = false;
+                        bC.positioning();
+                        return true;
+                    } else {
+                        for (BColumn bS : mY) {
+                            for(Card cD : bS) {
+                                if (cD.equals(cP)) {
+                                    bC.addAll(bS.removeFrom(cP));
+                                    bC.positioning();
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (bC.empty(x,y)) {
+                    for (BColumn bS : mY) {
+                        for(Card cD : bS) {
+                            if (cD.equals(cP)) {
+                                System.out.println(bS.size());
+                                bC.addAll(bS.removeFrom(cP));
+                                System.out.println(bS.size());
+                                bC.positioning();
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
     }
     
     /**

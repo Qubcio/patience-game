@@ -87,6 +87,6 @@ public class Card {
     }
     
     public boolean dCTake(Card card) {
-        return (!card.c.equals(this.c) && card.nmb == this.nmb +1);
+        return (card.t != this.t && card.nmb == this.nmb +1);
     }
 }
