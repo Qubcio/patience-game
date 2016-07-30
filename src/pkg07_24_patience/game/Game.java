@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
+import javax.swing.SwingUtilities;
 import pkg07_24_patience.Main;
 import static pkg07_24_patience.Main.MY_WIDTH;
 
@@ -70,6 +71,10 @@ public class Game implements MouseListener {
     @SuppressWarnings("StaticNonFinalUsedInInitialization")
     public static final int DIF = (MY_WIDTH - 2 * WL1 - COL * CW) / 6;
     public static final int DIFH = 30;
+    /**
+     * Number of top right decks.
+     */
+    public static final int TD = 4;
     //top first queue
     DequeMyClass tF;
     //top first queue
@@ -78,20 +83,32 @@ public class Game implements MouseListener {
     List<Card> dA;
     ListContainer l;
     BColumn[] mY;
-    boolean columnPick;
+    Card cP;
+    TopDeck[] tD;
+    boolean fromTop;
+    boolean ag;
+    
     /**
      *
      * @param main
      */
     public Game(Main main) {
-        
-        List<Card> cards = new LinkedList<>();
         tF = new DequeMyClass();
         dA = new LinkedList<>();
         tS = new DequeMyClass();
         l = new ListContainer();
         mY = new BColumn[COL];
-        columnPick = false;
+        tD = new TopDeck[TD];
+        for (int i = 0; i < tD.length; i++) {
+            tD[i] = new TopDeck(i+1);            
+        }
+        init();
+    }
+    
+    void init() {
+        List<Card> cards = new LinkedList<>();
+        cP = null;
+        fromTop = false;
         Type[] type = Type.values();
         for (int i = CF; i <= CL; i++) {
             for (Type t : type) {
@@ -114,8 +131,77 @@ public class Game implements MouseListener {
     public void mouseClicked(MouseEvent e) {
         int x = e.getX();
         int y = e.getY();
-        topLeft(x,y);
-        bottom(x,y);
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (cP != null) {
+                moveColumn(x, y);
+                cP = null;
+                l.setSel();
+                return;
+            }
+            cP = null;
+            l.setSel();
+            topLeft(x,y);
+            bottom(x,y);
+        } else if(SwingUtilities.isRightMouseButton(e)) {
+            topRight();
+        }
+    }
+    
+    private void topRight() {
+        // tS and mY check if can take
+        do {
+            ag = false;
+            for (TopDeck tR : tD) {
+                if (tR.isEmpty()) {
+                    check(2, tR);
+                } else {
+                    check(tR.getLast().nmb, tR);
+                }
+            }
+        } while (ag);
+    }
+    
+    private void check(int x, TopDeck td) {
+        if (x == 2) {
+            if (!tS.isEmpty() && tS.getLast().nmb == 2) {
+                td.add(tS.getLast());
+                tS.removeLast();
+                ag = true;
+            } else {
+                for (int i = 0; i < mY.length; i++) {
+                    if (!mY[i].isEmpty() && mY[i].getLast().nmb == 2) {
+                        td.add(mY[i].getLast());
+                        mY[i].removeLast();
+                        if (!mY[i].isEmpty())
+                            mY[i].getLast().show = true;
+                        ag = true;
+                        break;
+                    }
+                }
+            }
+        } else {
+            if (!tS.isEmpty() && checkV(tS.getLast(), td.getLast())) {
+                System.out.println("tak");
+                td.add(tS.getLast());
+                tS.removeLast();
+                ag = true;
+            } else {
+                for (int i = 0; i < mY.length; i++) {
+                    if (checkV(mY[i].getLast(), td.getLast())) {
+                        td.add(mY[i].getLast());
+                        mY[i].removeLast();
+                        if (!mY[i].isEmpty())
+                            mY[i].getLast().show = true;
+                        ag = true;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    
+    private boolean checkV(Card a, Card b) {
+        return (a.nmb == (b.nmb - 1) && a.T == b.T);
     }
     
     /**
@@ -126,6 +212,7 @@ public class Game implements MouseListener {
         l.add(dA);
         l.add(tS);
         l.addAll(Arrays.asList(mY));
+        l.addAll(Arrays.asList(tD));
     }
     
     /**
@@ -160,6 +247,8 @@ public class Game implements MouseListener {
         }
         if (!tS.isEmpty() && tS.getLast().clickIn(x, y)) {
             tS.getLast().selected = !tS.getLast().selected;
+            cP = tS.getLast();
+            fromTop = true;
         }
     }
 
@@ -167,10 +256,72 @@ public class Game implements MouseListener {
         for (BColumn bC : mY) {
             int a = bC.inList(x, y);
             if (a != -1) {
-                columnPick = bC.highlight(a);
+                cP = bC.highlight(a);
                 break;
             }
         }
+    }
+
+    private boolean moveColumn(int x, int y) {
+        for (BColumn bC : mY) {
+            if (!bC.isEmpty()) {
+                if(bC.getLast().clickIn(x, y) && bC.getLast().nmb == cP.nmb + 1 
+                    && bC.getLast().t != cP.t) {
+                    if(fromTop) {
+                        bC.addLast(cP);
+                        tS.removeLast();
+                        fromTop = false;
+                        bC.positioning();
+                        return true;
+                    } else {
+                        for (BColumn bS : mY) {
+                            for(Card cD : bS) {
+                                if (cD.equals(cP)) {
+                                    bC.addAll(bS.removeFrom(cP));
+                                    bC.positioning();
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                if (bC.empty(x,y)) {
+                    if(fromTop) {
+                        bC.addLast(cP);
+                        tS.removeLast();
+                        fromTop = false;
+                        bC.positioning();
+                        return true;
+                    } else {
+                        for (BColumn bS : mY) {
+                            for(Card cD : bS) {
+                                if (cD.equals(cP)) {
+                                    bC.addAll(bS.removeFrom(cP));
+                                    bC.positioning();
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+    
+    public void wipe() {
+        tF.clear();
+        dA.clear();
+        tS.clear();
+        for (BColumn m : mY) {
+            m.clear();
+        }
+        for (TopDeck t : tD) {
+            t.clear();
+        }
+        l.clear();
+        init();
     }
     
     /**

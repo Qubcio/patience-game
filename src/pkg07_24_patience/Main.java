@@ -107,6 +107,7 @@ public class Main extends Canvas implements Runnable {
     }
 
     void wipe() {
+        game.wipe();
     }
     
 }

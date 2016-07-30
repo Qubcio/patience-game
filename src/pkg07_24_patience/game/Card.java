@@ -22,12 +22,14 @@ public class Card {
     boolean show;
     boolean selected;
     char t;
+    Type T;
 
     public Card(int x, int y, int nmb, Type T, boolean show) {
         this.x = x;
         this.y = y;
         this.nmb = nmb;
         this.show = show;
+        this.T = T;
         selected = false;
         switch(T) {
             case CLUB: {
@@ -87,6 +89,6 @@ public class Card {
     }
     
     public boolean dCTake(Card card) {
-        return (!card.c.equals(this.c) && card.nmb == this.nmb +1);
+        return (card.t != this.t && card.nmb == this.nmb +1);
     }
 }
