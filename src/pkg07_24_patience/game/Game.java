@@ -9,10 +9,8 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.ArrayDeque;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import javax.swing.SwingUtilities;
@@ -24,12 +22,12 @@ import static pkg07_24_patience.Main.MY_WIDTH;
  * @author qubcio
  */
 public class Game implements MouseListener {
-    public static final int CW = 130,
+    public static final int CW = 122,
 
     /**
      * CW - card witdth, CH - card height
      */
-    CH = 180;
+    CH = 186;
 
     /**
      * the lowest type card
@@ -105,7 +103,7 @@ public class Game implements MouseListener {
         init();
     }
     
-    void init() {
+    private void init() {
         List<Card> cards = new LinkedList<>();
         cP = null;
         fromTop = false;
@@ -134,6 +132,7 @@ public class Game implements MouseListener {
         if (SwingUtilities.isLeftMouseButton(e)) {
             if (cP != null) {
                 moveColumn(x, y);
+                moveTopRight(x,y);
                 cP = null;
                 l.setSel();
                 return;
@@ -142,12 +141,51 @@ public class Game implements MouseListener {
             l.setSel();
             topLeft(x,y);
             bottom(x,y);
+            topRightL(x, y);
         } else if(SwingUtilities.isRightMouseButton(e)) {
-            topRight();
+            topRightR();
         }
     }
     
-    private void topRight() {
+    private void moveTopRight(int x, int y) {
+        outer: for (BColumn b : mY) {
+            if (!b.isEmpty() && b.getLast().clickIn(x, y)) {
+                for (TopDeck t : tD) {
+                    if (!t.isEmpty() && t.getLast().selected && b.getLast().t 
+                            != cP.t && b.getLast().nmb == cP.nmb + 1) {
+                        b.add(cP);
+                        t.remove(cP);
+                        cP.selected = false;
+                        cP = null;
+                        b.positioning();
+                        break outer;
+                    }
+                }
+            }
+            for (TopDeck t : tD) {
+                if (b.isEmpty() && b.empty(x,y) && !t.isEmpty() && t.getLast().selected) {
+                    System.out.println("tak");
+                    b.add(cP);
+                    t.remove(cP);
+                    cP.selected = false;
+                    cP = null;
+                    b.positioning();
+                    break outer;
+                }
+            }
+        }
+    }
+    
+    private void topRightL(int x, int y) {
+        for (TopDeck t : tD) {
+            if (!t.isEmpty() && t.getLast().clickIn(x, y)) {
+                cP = t.getLast();
+                cP.selected = true;
+            }
+        }
+    }
+    
+    private void topRightR() {
         // tS and mY check if can take
         do {
             ag = false;
@@ -155,7 +193,7 @@ public class Game implements MouseListener {
                 if (tR.isEmpty()) {
                     check(2, tR);
                 } else {
-                    check(tR.getLast().nmb, tR);
+                    check(tR.getLast().nmb+1, tR);
                 }
             }
         } while (ag);
@@ -168,12 +206,13 @@ public class Game implements MouseListener {
                 tS.removeLast();
                 ag = true;
             } else {
-                for (int i = 0; i < mY.length; i++) {
-                    if (!mY[i].isEmpty() && mY[i].getLast().nmb == 2) {
-                        td.add(mY[i].getLast());
-                        mY[i].removeLast();
-                        if (!mY[i].isEmpty())
-                            mY[i].getLast().show = true;
+                for (BColumn mY1 : mY) {
+                    if (!mY1.isEmpty() && mY1.getLast().nmb == 2) {
+                        td.add(mY1.getLast());
+                        mY1.removeLast();
+                        if (!mY1.isEmpty()) {
+                            mY1.getLast().show = true;
+                        }
                         ag = true;
                         break;
                     }
@@ -181,17 +220,16 @@ public class Game implements MouseListener {
             }
         } else {
             if (!tS.isEmpty() && checkV(tS.getLast(), td.getLast())) {
-                System.out.println("tak");
                 td.add(tS.getLast());
                 tS.removeLast();
                 ag = true;
             } else {
-                for (int i = 0; i < mY.length; i++) {
-                    if (checkV(mY[i].getLast(), td.getLast())) {
-                        td.add(mY[i].getLast());
-                        mY[i].removeLast();
-                        if (!mY[i].isEmpty())
-                            mY[i].getLast().show = true;
+                for (BColumn mY1 : mY) {
+                    if (!mY1.isEmpty() && checkV(mY1.getLast(), td.getLast())) {
+                        td.add(mY1.getLast());
+                        mY1.removeLast();
+                        if (!mY1.isEmpty())
+                            mY1.getLast().show = true;
                         ag = true;
                         break;
                     }
@@ -201,7 +239,7 @@ public class Game implements MouseListener {
     }
     
     private boolean checkV(Card a, Card b) {
-        return (a.nmb == (b.nmb - 1) && a.T == b.T);
+        return (a.nmb == (b.nmb + 1) && a.T == b.T);
     }
     
     /**
@@ -286,7 +324,7 @@ public class Game implements MouseListener {
                     }
                 }
             } else {
-                if (bC.empty(x,y)) {
+                if (bC.empty(x,y) && cP.nmb == CL) {
                     if(fromTop) {
                         bC.addLast(cP);
                         tS.removeLast();
