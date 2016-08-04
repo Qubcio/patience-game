@@ -81,7 +81,6 @@ public class BColumn extends LinkedList<Card> {
                     for (int j = x; j < size(); j++) {
                         get(j).selected = true;
                     }
-                    System.out.println(size());
                     return this.get(x);
                 }
             }

@@ -8,6 +8,12 @@ package pkg07_24_patience.game;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.Image;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.imageio.ImageIO;
 import static pkg07_24_patience.game.Game.CH;
 import static pkg07_24_patience.game.Game.CW;
 
@@ -18,11 +24,13 @@ import static pkg07_24_patience.game.Game.CW;
 public class Card {
     int x,y;
     int nmb;
-    Color c;
     boolean show;
     boolean selected;
     char t;
     Type T;
+    String name;
+    Image image;
+    Image unknow;
 
     public Card(int x, int y, int nmb, Type T, boolean show) {
         this.x = x;
@@ -30,54 +38,54 @@ public class Card {
         this.nmb = nmb;
         this.show = show;
         this.T = T;
+        name = "pic/";
         selected = false;
         switch(T) {
             case CLUB: {
-                c = Color.LIGHT_GRAY.darker();
+                //zoladz
                 t = 'b';
+                name += "c";
             }   break;
             case DIAMOND: {
-                c = Color.yellow.darker();
+                //dzwonek
                 t = 'w';
+                name += "d";
             }   break;
             case HEART: {
-                c = Color.RED;
+                //serce
                 t = 'w';
+                name += "h";
             }   break;
             case SPADE: {
-                c = Color.BLACK;
+                //wino
                 t = 'b';
+                name += "s";
             }   break;
+        }
+        name += "_";
+        name += Integer.toString(nmb);
+        image = null;
+        unknow = null;
+        try {
+            image = ImageIO.read(new File(name+".png"));
+            unknow = ImageIO.read(new File("pic/nn.png"));
+        } catch (IOException ex) {
+            Logger.getLogger(Card.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
     public void render(Graphics g) {
-        if (!selected) {
-            g.setColor(Color.WHITE);
-        } else {
-            g.setColor(Color.pink.darker());
-        }
-        g.fillRect(x+1, y+1, CW-1, CH-1);
         if (show) {
-            g.setColor(c);
-            g.setFont(new Font("Arial", 1, CH/10));
-            g.drawString(Integer.toString(nmb), x+5, y+CH/9);
-            if (nmb < 10) {
-                g.setFont(new Font("Arial", 1, CH/2));
-                g.drawString(Integer.toString(nmb), x+35, y+CH-55);
-            } else {
-                g.setFont(new Font("Arial", 1, CH/3));
-                g.drawString(Integer.toString(nmb), x+25, y+CH-70);
-            }
+            g.drawImage(image, x, y, null);
         } else {
-            g.setColor(Color.blue);
-            g.setFont(new Font("Arial", 1, CH/2));
-            g.drawString("?", x+39, y+CH-55);
-            g.setFont(new Font("Arial", 1, CH/10));
-            g.drawString("?", x+6, y+CH/9);
+            g.drawImage(unknow, x, y, null);
         }
-        g.setColor(Color.black);
-        g.drawRect(x, y, CW, CH);
+        if (selected) {
+            g.setColor(Color.green);
+            for (int i = 0; i < 6; i++) {
+                g.drawRect(x+i, y+i, CW-2*i, CH-2*i);
+            }
+        }
     }
     
     public boolean clickIn(int x, int y) {
@@ -91,4 +99,10 @@ public class Card {
     public boolean dCTake(Card card) {
         return (card.t != this.t && card.nmb == this.nmb +1);
     }
+
+    @Override
+    public String toString() {
+        return "Card{" + "x=" + x + ", y=" + y + ", nmb=" + nmb + ", show=" + show + ", selected=" + selected + ", t=" + t + ", T=" + T + '}';
+    }
+    
 }
