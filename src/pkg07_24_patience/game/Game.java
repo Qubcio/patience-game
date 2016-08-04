@@ -164,7 +164,6 @@ public class Game implements MouseListener {
             }
             for (TopDeck t : tD) {
                 if (b.isEmpty() && b.empty(x,y) && !t.isEmpty() && t.getLast().selected) {
-                    System.out.println("tak");
                     b.add(cP);
                     t.remove(cP);
                     cP.selected = false;
